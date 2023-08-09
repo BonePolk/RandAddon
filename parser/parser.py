@@ -1,8 +1,11 @@
-import requests
-from bs4 import BeautifulSoup as BS
+import webbrowser
 
 from random import randint
-import webbrowser
+from pathlib import Path
+
+import requests
+
+from bs4 import BeautifulSoup as BS
 
 
 def parser(No=int(), Np=int(), Type=str()):
@@ -26,6 +29,8 @@ def parser(No=int(), Np=int(), Type=str()):
     html = BS(page.content, "html.parser")
     find = multiclassparse("download-item border-radius", html)
     links = []
+    files = []
+
     print("N°", No + 1, sep="")
     print(texts[No])
     print(pages[No])
@@ -34,20 +39,28 @@ def parser(No=int(), Np=int(), Type=str()):
 
     links.append(pages[No])
     print("  " + str(len(links)), "Описание " + texts[No], sep=": ")
+
     for way in find:
         name = way.select(".item-content > span")[0].text
         link = way.select(".item-content > .flex-sm > a")[0].get("href")
         links.append(link)
+        id, fileName = parseDownload(link)
+        files.append((id, fileName))
         print("  " + str(len(links)), name, sep=": ")
+
+    for i, way in enumerate(files):
+        print(f"  {len(links)+1+i}: Скачать автоматически {way[1]}")
 
     # find = find.select(".flex-sm")
 
     # print(find)
-    inp = getintinputinrange(0, len(links));
-    if inp == 0:
-        return ""
+    inp = getintinputinrange(0, len(links)+1)
 
-    webbrowser.open(links[inp - 1])
+    if inp > len(links):
+        file = files[inp-len(links)-1]
+        download(file[0], file[1])
+    elif not inp == 0:
+        webbrowser.open(links[inp - 1])
 
     return ""
 
@@ -90,3 +103,27 @@ def parserpages(typ: str):
     find = html.select('.navigation > .flex > .flex > a')[2]
     return int(find.text)
 
+def parseDownload(link: str):
+    fileId = int(link.split("=")[-1])
+
+    html = BS(requests.get(link).content, "html.parser")
+
+    dwContent = html.select(".download-content > p")
+
+    return fileId, dwContent[0].text
+
+def download(fileId: int, fileName: str):
+    getfile = f"https://mcpehub.org/engine/getfile.php?id={fileId}"
+
+    fileContent = requests.get(getfile).content
+
+    save(fileContent, fileName)
+
+def save(fileContent: str, fileName: str):
+    savedir = Path.cwd().joinpath("saved")
+
+    if not savedir.exists():
+        savedir.mkdir()
+
+    file = savedir.joinpath(fileName)
+    file.open("wb+").write(fileContent)
