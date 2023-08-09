@@ -1,8 +1,11 @@
-import requests
-from bs4 import BeautifulSoup as BS
+import webbrowser
 
 from random import randint
-import webbrowser
+from pathlib import Path
+
+import requests
+
+from bs4 import BeautifulSoup as BS
 
 
 def parser(No=int(), Np=int(), Type=str()):
@@ -90,3 +93,18 @@ def parserpages(typ: str):
     find = html.select('.navigation > .flex > .flex > a')[2]
     return int(find.text)
 
+def download(fileId: int, fileName: str):
+    getfile = f"https://mcpehub.org/engine/getfile.php?id={fileId}"
+
+    fileContent = requests.get(getfile).content
+
+    save(fileContent, fileName)
+
+def save(fileContent: str, fileName: str):
+    savedir = Path.cwd().joinpath("saved")
+
+    if not savedir.exists():
+        savedir.mkdir()
+
+    file = savedir.joinpath(fileName)
+    file.open("wb+").write(fileContent)

@@ -15,5 +15,8 @@ def main():
             except Exception as ex:
                 print(ex)
 
+def test():
+    parser.download(3349, "test.mcpack")
+
 if __name__ == "__main__":
-    main()
+    test()
