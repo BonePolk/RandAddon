@@ -19,4 +19,4 @@ def test():
     parser.download(3349, "test.mcpack")
 
 if __name__ == "__main__":
-    test()
+    main()
